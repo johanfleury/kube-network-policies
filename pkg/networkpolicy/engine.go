@@ -39,12 +39,13 @@ func NewPolicyEngine(podInfoProvider api.PodInfoProvider, evaluators []api.Polic
 
 // EvaluatePacket runs the full ingress and egress evaluation pipelines.
 func (e *PolicyEngine) EvaluatePacket(ctx context.Context, packet *network.Packet) (bool, error) {
-	logger := klog.FromContext(ctx)
-
 	// Only run podInfoProvider once per packet to guarantee consistency
 	// across the pipeline and for efficiency.
 	srcPod, _ := e.podInfoProvider.GetPodInfoByIP(packet.SrcIP.String())
 	dstPod, _ := e.podInfoProvider.GetPodInfoByIP(packet.DstIP.String())
+
+	logger := PacketLoggerFromContext(ctx, packet, srcPod, dstPod)
+	ctx = klog.NewContext(ctx, logger)
 
 	// 1. Evaluate Egress
 	verdict, err := e.runEgressPipeline(ctx, packet, srcPod, dstPod)

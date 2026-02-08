@@ -6,7 +6,6 @@ import (
 	"context"
 	"net/netip"
 
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/kube-network-policies/pkg/api"
 	"sigs.k8s.io/kube-network-policies/pkg/network"
 )
@@ -54,20 +53,6 @@ func (l *LoggingPolicy) EvaluateEgress(ctx context.Context, p *network.Packet, s
 
 // logPacket is a helper function to format and write the log message.
 func logPacket(ctx context.Context, direction string, p *network.Packet, srcPod, dstPod *api.PodInfo) {
-	logger := klog.FromContext(ctx)
-
-	srcPodStr, dstPodStr := "external", "external"
-	if srcPod != nil {
-		srcPodStr = srcPod.Namespace.Name + "/" + srcPod.Name
-	}
-	if dstPod != nil {
-		dstPodStr = dstPod.Namespace.Name + "/" + dstPod.Name
-	}
-
-	logger.Info("Evaluating packet",
-		"direction", direction,
-		"srcPod", srcPodStr,
-		"dstPod", dstPodStr,
-		"packet", p,
-	)
+	logger := PacketLoggerFromContext(ctx, p, srcPod, dstPod)
+	logger.Info("Evaluating packet", "direction", direction)
 }
